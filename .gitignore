@@ -1,0 +1,8 @@
+.env
+__pycache__/
+*.pyc
+price_cache.parquet
+reports/
+signal_charts/
+cot_charts/
+results_table.csv
