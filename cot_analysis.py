@@ -39,6 +39,29 @@ Z_EXTREME       = 1.5   # z-score threshold for "extreme" classification
 Z_WINDOW        = 156   # rolling window for z-score (3 years of weekly data)
 Z_MIN_PERIODS   = 52    # minimum history before z-score is meaningful
 FWD_HORIZONS    = [1, 2, 4, 12]   # forward return horizons in weeks
+
+import json as _json
+
+def _load_params() -> dict:
+    """Read optimized parameters from params.json; fall back to hardcoded defaults."""
+    _path = Path(__file__).parent / "params.json"
+    _defaults = {"Z_WINDOW": Z_WINDOW, "Z_EXTREME": Z_EXTREME}
+    if _path.exists():
+        try:
+            with open(_path) as _f:
+                _d = _json.load(_f)
+            _w, _e = int(_d["Z_WINDOW"]), float(_d["Z_EXTREME"])
+            if _w > 0 and _e > 0:
+                return {"Z_WINDOW": _w, "Z_EXTREME": _e}
+        except Exception:
+            pass
+    return _defaults
+
+_params       = _load_params()
+Z_WINDOW      = _params["Z_WINDOW"]
+Z_EXTREME     = _params["Z_EXTREME"]
+Z_MIN_PERIODS = Z_WINDOW // 3
+
 PRICE_START     = "2010-01-01"
 
 # (substring to match in COT market name, yfinance ticker, invert_sign)
@@ -231,6 +254,8 @@ def analyze_extremes(df: pd.DataFrame, threshold: float = Z_EXTREME) -> pd.DataF
 
     for instrument, grp in df.groupby("instrument"):
         grp = grp.dropna(subset=["z_score"])
+        if grp.empty:
+            continue
         ticker = grp["ticker"].iloc[0]
 
         subsets = [

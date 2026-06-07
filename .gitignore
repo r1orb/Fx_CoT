@@ -6,3 +6,4 @@ reports/
 signal_charts/
 cot_charts/
 results_table.csv
+params.json
